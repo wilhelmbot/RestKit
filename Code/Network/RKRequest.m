@@ -63,6 +63,8 @@
 @synthesize queue = _queue;
 @synthesize reachabilityObserver = _reachabilityObserver;
 @synthesize configurationDelegate = _configurationDelegate;
+@synthesize onDidLoadResponse;
+@synthesize onDidFailLoadWithError;
 
 #if TARGET_OS_IPHONE
 @synthesize backgroundPolicy = _backgroundPolicy, backgroundTaskIdentifier = _backgroundTaskIdentifier;
@@ -165,6 +167,10 @@
     _OAuth2AccessToken = nil;
     [_OAuth2RefreshToken release];
     _OAuth2RefreshToken = nil;
+    [onDidFailLoadWithError release];
+    onDidFailLoadWithError = nil;
+    [onDidLoadResponse release];
+    onDidLoadResponse = nil;
     
     // Cleanup a background task if there is any
     [self cleanupBackgroundTask];
@@ -539,6 +545,10 @@
 			[_delegate request:self didFailLoadWithError:error];
 		}
         
+        if (self.onDidFailLoadWithError) {
+            self.onDidFailLoadWithError(error);
+        }
+        
         NSDictionary* userInfo = [NSDictionary dictionaryWithObject:error forKey:RKRequestDidFailWithErrorNotificationUserInfoErrorKey];
 		[[NSNotificationCenter defaultCenter] postNotificationName:RKRequestDidFailWithErrorNotification 
                                                             object:self 
@@ -573,6 +583,10 @@
 	if ([_delegate respondsToSelector:@selector(request:didLoadResponse:)]) {
 		[_delegate request:self didLoadResponse:finalResponse];
 	}
+    
+    if (self.onDidLoadResponse) {
+        self.onDidLoadResponse(finalResponse);
+    }
     
     if ([response isServiceUnavailable]) {
         [[NSNotificationCenter defaultCenter] postNotificationName:RKServiceDidBecomeUnavailableNotification object:self];
