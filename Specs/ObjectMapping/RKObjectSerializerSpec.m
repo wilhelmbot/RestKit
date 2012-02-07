@@ -256,4 +256,43 @@
     assertThat(data, is(equalTo(@"{\"boolean-value\":true}")));
 }
 
+- (void)testShouldSerializeToXML {
+    NSDictionary* object = [NSDictionary dictionaryWithObjectsAndKeys:@"value1", @"key1", @"value2", @"key2", nil];
+    
+    RKObjectMapping* mapping = [RKObjectMapping mappingForClass:[NSDictionary class]];
+    [mapping addAttributeMapping:[RKObjectAttributeMapping mappingFromKeyPath:@"key1" toKeyPath:@"key1-form-name"]];
+    [mapping addAttributeMapping:[RKObjectAttributeMapping mappingFromKeyPath:@"key2" toKeyPath:@"key2-form-name"]];
+
+    RKObjectSerializer* serializer = [RKObjectSerializer serializerWithObject:object mapping:mapping];
+    NSError* error = nil;
+    id<RKRequestSerializable> serialization = [serializer serializationForMIMEType:@"application/xml" error:&error];
+    NSString* data = [[[NSString alloc] initWithData:[serialization HTTPBody] encoding:NSUTF8StringEncoding] autorelease];
+    data = [data stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    
+    assertThat(error, is(nilValue()));
+    assertThat(data, is(equalTo(@"<key2-form-name>value2</key2-form-name><key1-form-name>value1</key1-form-name>")));
+}
+
+- (void)testShouldSerializeToXMLUsingRootObject {
+    // <journal-entry><body>Lorem ipsum</body></journal-entry>
+    NSDictionary* object = [NSDictionary dictionaryWithObjectsAndKeys:@"value1", @"key1", @"value2", @"key2", nil];
+    NSDictionary* root = [NSDictionary dictionaryWithObject:object forKey:@"object"];
+    
+    RKObjectMapping* mapping = [RKObjectMapping mappingForClass:[NSDictionary class]];
+    [mapping addAttributeMapping:[RKObjectAttributeMapping mappingFromKeyPath:@"key1" toKeyPath:@"key1-form-name"]];
+    [mapping addAttributeMapping:[RKObjectAttributeMapping mappingFromKeyPath:@"key2" toKeyPath:@"key2-form-name"]];
+
+    RKObjectMapping* rootMapping = [RKObjectMapping mappingForClass:[NSDictionary class]];
+    [rootMapping mapRelationship:@"object" withMapping:mapping];
+
+    RKObjectSerializer* serializer = [RKObjectSerializer serializerWithObject:root mapping:rootMapping];
+    NSError* error = nil;
+    id<RKRequestSerializable> serialization = [serializer serializationForMIMEType:@"application/xml" error:&error];
+    NSString* data = [[[NSString alloc] initWithData:[serialization HTTPBody] encoding:NSUTF8StringEncoding] autorelease];
+    data = [data stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    
+    assertThat(error, is(nilValue()));
+    assertThat(data, is(equalTo(@"<object><key2-form-name>value2</key2-form-name><key1-form-name>value1</key1-form-name></object>")));
+}
+
 @end
