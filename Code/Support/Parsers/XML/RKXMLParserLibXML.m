@@ -153,8 +153,31 @@
 }
 
 - (NSString*)stringFromObject:(id)object error:(NSError **)error {    
-    [self doesNotRecognizeSelector:_cmd];
-    return nil;
+    if ([object isKindOfClass:[NSDictionary class]] == NO) {
+        NSLog(@"Serialized object is not of kind NSDictionary");
+        return nil;
+    }
+    
+    // Only two levels currently supported:
+    // <journal-entry><body>Lorem ipsum</body></journal-entry>
+    
+    NSMutableString *xmlString = [NSMutableString stringWithCapacity:1];
+    
+    for (id property in object) {
+        id value = [object valueForKey:property];
+        [xmlString appendFormat:@"<%@>", property];
+        if ([value isKindOfClass:[NSDictionary class]]) {
+            for (id nProperty in value) {
+                id nValue = [value valueForKey:nProperty];
+                [xmlString appendFormat:@"<%@>%@</%@>", nProperty, nValue, nProperty];
+            }
+        } else {
+            [xmlString appendFormat:@"%@", value];
+        }
+        [xmlString appendFormat:@"</%@>", property];
+    }
+    
+    return xmlString;
 }
 
 @end
