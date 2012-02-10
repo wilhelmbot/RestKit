@@ -517,6 +517,8 @@
 		25B408271491CDDC00F21111 /* RKDirectory.h in Headers */ = {isa = PBXBuildFile; fileRef = 25B408241491CDDB00F21111 /* RKDirectory.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25B408281491CDDC00F21111 /* RKDirectory.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B408251491CDDB00F21111 /* RKDirectory.m */; };
 		25B408291491CDDC00F21111 /* RKDirectory.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B408251491CDDB00F21111 /* RKDirectory.m */; };
+		DC97E58214E4B3F8002EE1B2 /* RKObjectLoader+CompletionBlocks.h in Headers */ = {isa = PBXBuildFile; fileRef = DC97E58014E4B3F8002EE1B2 /* RKObjectLoader+CompletionBlocks.h */; };
+		DC97E58314E4B3F8002EE1B2 /* RKObjectLoader+CompletionBlocks.m in Sources */ = {isa = PBXBuildFile; fileRef = DC97E58114E4B3F8002EE1B2 /* RKObjectLoader+CompletionBlocks.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -870,6 +872,8 @@
 		25A34244147D8AAA0009758D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = SDKs/MacOSX10.7.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
 		25B408241491CDDB00F21111 /* RKDirectory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RKDirectory.h; sourceTree = "<group>"; };
 		25B408251491CDDB00F21111 /* RKDirectory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RKDirectory.m; sourceTree = "<group>"; };
+		DC97E58014E4B3F8002EE1B2 /* RKObjectLoader+CompletionBlocks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "RKObjectLoader+CompletionBlocks.h"; sourceTree = "<group>"; };
+		DC97E58114E4B3F8002EE1B2 /* RKObjectLoader+CompletionBlocks.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "RKObjectLoader+CompletionBlocks.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1065,6 +1069,8 @@
 				25160D83145650490060A5C5 /* RKObjectAttributeMapping.m */,
 				25160D84145650490060A5C5 /* RKObjectLoader.h */,
 				25160D85145650490060A5C5 /* RKObjectLoader.m */,
+				DC97E58014E4B3F8002EE1B2 /* RKObjectLoader+CompletionBlocks.h */,
+				DC97E58114E4B3F8002EE1B2 /* RKObjectLoader+CompletionBlocks.m */,
 				25160D86145650490060A5C5 /* RKObjectLoader_Internals.h */,
 				25160D87145650490060A5C5 /* RKObjectManager.h */,
 				25160D88145650490060A5C5 /* RKObjectManager.m */,
@@ -1660,6 +1666,7 @@
 				25160F081456532C0060A5C5 /* SOCKit.h in Headers */,
 				25160E2E145650490060A5C5 /* RestKit.h in Headers */,
 				25B408261491CDDC00F21111 /* RKDirectory.h in Headers */,
+				DC97E58214E4B3F8002EE1B2 /* RKObjectLoader+CompletionBlocks.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2077,6 +2084,7 @@
 				25160EFA1456532C0060A5C5 /* LCLNSLog.m in Sources */,
 				25160F0A1456532C0060A5C5 /* SOCKit.m in Sources */,
 				25B408281491CDDC00F21111 /* RKDirectory.m in Sources */,
+				DC97E58314E4B3F8002EE1B2 /* RKObjectLoader+CompletionBlocks.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
