@@ -136,7 +136,7 @@ typedef void (^RKObjectLoaderCompletionHandler)(RKObjectLoader *, NSArray *, NSE
  *
  * @default nil 
  */
-@property (nonatomic, retain) RKObjectLoaderCompletionHandler completionHandler;
+@property (nonatomic, copy) RKObjectLoaderCompletionHandler completionHandler;
 
 /**
  * The object mapping to use when processing the response. If this is nil,
