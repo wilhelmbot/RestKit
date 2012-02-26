@@ -25,6 +25,13 @@
 @class RKObjectManager;
 @class RKObjectLoader;
 
+#if NS_BLOCKS_AVAILABLE 
+// NSArray will be nil when objectLoader:didFailWithError: is invoked
+// NSError will be nil when objectLoader:didLoadObjects: is invoked
+typedef void (^RKObjectLoaderCompletionHandler)(RKObjectLoader *, NSArray *, NSError *);
+#endif
+
+
 @protocol RKObjectLoaderDelegate <RKRequestDelegate>
 
 @required
@@ -118,6 +125,18 @@
     NSObject* _sourceObject;
 	NSObject* _targetObject;
 }
+
+/**
+ * Completion routine associated with this loader.
+ * @param the current RKObjectLoader
+ * @param a NSArray containing result objects. Will be nil when
+ * objectLoader:didFailWithError: is invoked.
+ * @param a NSError specifying RestKit errors. Will be nil when
+ * objectLoader:didLoadObjects: is invoked.
+ *
+ * @default nil 
+ */
+@property (nonatomic, retain) RKObjectLoaderCompletionHandler completionHandler;
 
 /**
  * The object mapping to use when processing the response. If this is nil,
