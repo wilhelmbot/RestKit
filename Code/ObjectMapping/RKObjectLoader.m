@@ -78,6 +78,8 @@
     [_serializationMIMEType release];
     [_serializationMapping release];
     
+    [completionHandler release];
+    
 	[super dealloc];
 }
 
