@@ -37,6 +37,8 @@
                     // Assume that empty strings are irrelevant and go for an attribute-collection instead
                     if ([val length] == 0) {
                         val = [NSMutableDictionary dictionary];
+                        attrs = [NSMutableDictionary dictionary];
+                        oldVal = [attrs valueForKey:nodeName];
                         NSMutableDictionary* elem = [NSMutableDictionary dictionaryWithObject:val forKey:nodeName];
                         [nodes addObject:elem];
                     } else {
@@ -50,7 +52,7 @@
                 }
                 
                 // Only add attributes to nodes if there actually is one.
-                if (![nodes containsObject:attrs]) {
+                if (![nodes containsObject:attrs] && [attrs count] > 0) {
                     [nodes addObject:attrs];
                 }
             } else {
@@ -123,7 +125,7 @@
     }
     /* Parse the string. */
     const char* buffer = [xml cStringUsingEncoding:NSUTF8StringEncoding];
-    doc = xmlParseMemory(buffer, strlen(buffer));
+    doc = xmlParseMemory(buffer, (int) strlen(buffer));
     
     /* check if parsing suceeded */
     if (doc == NULL) {
@@ -151,8 +153,31 @@
 }
 
 - (NSString*)stringFromObject:(id)object error:(NSError **)error {    
-    [self doesNotRecognizeSelector:_cmd];
-    return nil;
+    if ([object isKindOfClass:[NSDictionary class]] == NO) {
+        NSLog(@"Serialized object is not of kind NSDictionary");
+        return nil;
+    }
+    
+    // Only two levels currently supported:
+    // <journal-entry><body>Lorem ipsum</body></journal-entry>
+    
+    NSMutableString *xmlString = [NSMutableString stringWithCapacity:1];
+    
+    for (id property in object) {
+        id value = [object valueForKey:property];
+        [xmlString appendFormat:@"<%@>", property];
+        if ([value isKindOfClass:[NSDictionary class]]) {
+            for (id nProperty in value) {
+                id nValue = [value valueForKey:nProperty];
+                [xmlString appendFormat:@"<%@>%@</%@>", nProperty, nValue, nProperty];
+            }
+        } else {
+            [xmlString appendFormat:@"%@", value];
+        }
+        [xmlString appendFormat:@"</%@>", property];
+    }
+    
+    return xmlString;
 }
 
 @end

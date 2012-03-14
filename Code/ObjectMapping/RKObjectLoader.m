@@ -27,7 +27,7 @@
 #import "RKParser.h"
 #import "RKObjectLoader_Internals.h"
 #import "RKParserRegistry.h"
-#import "../Network/RKRequest_Internals.h"
+#import "RKRequest_Internals.h"
 #import "RKObjectSerializer.h"
 
 // Set Logging Component
@@ -46,6 +46,7 @@
 @synthesize serializationMapping = _serializationMapping;
 @synthesize serializationMIMEType = _serializationMIMEType;
 @synthesize sourceObject = _sourceObject;
+@synthesize completionHandler;
 
 + (id)loaderWithResourcePath:(NSString*)resourcePath objectManager:(RKObjectManager*)objectManager delegate:(id<RKObjectLoaderDelegate>)delegate {
     return [[[self alloc] initWithResourcePath:resourcePath objectManager:objectManager delegate:delegate] autorelease];
@@ -76,6 +77,8 @@
     _result = nil;
     [_serializationMIMEType release];
     [_serializationMapping release];
+    
+    [completionHandler release];
     
 	[super dealloc];
 }
@@ -146,7 +149,7 @@
  @protected
  */
 - (void)processMappingResult:(RKObjectMappingResult*)result {
-    NSAssert(![NSThread isMainThread], @"Mapping result processing should occur on a background thread");
+    NSAssert(_sentSynchronously || ![NSThread isMainThread], @"Mapping result processing should occur on a background thread");
     [self performSelectorOnMainThread:@selector(informDelegateOfObjectLoadWithResultDictionary:) withObject:[result asDictionary] waitUntilDone:YES];
 }
 
@@ -203,11 +206,10 @@
 - (RKObjectMappingResult*)performMapping:(NSError**)error {
     NSAssert(_sentSynchronously || ![NSThread isMainThread], @"Mapping should occur on a background thread");
     
-    // TODO: Assert that we are on the background thread
     RKObjectMappingProvider* mappingProvider;
     if (self.objectMapping) {
         NSString* rootKeyPath = self.objectMapping.rootKeyPath ? self.objectMapping.rootKeyPath : @"";
-        RKLogDebug(@"Found directly configured object mapping, creating temporary mapping provider %@", (rootKeyPath ? @"for keyPath '%@'" : nil));
+        RKLogDebug(@"Found directly configured object mapping, creating temporary mapping provider for keyPath %@", rootKeyPath);
         mappingProvider = [[RKObjectMappingProvider new] autorelease];        
         [mappingProvider setMapping:self.objectMapping forKeyPath:rootKeyPath];
     } else {
@@ -254,9 +256,13 @@
 		[self finalizeLoad:NO error:self.response.failureError];
         
 		return NO;
+    } else if ([self.response isNoContent]) {
+        // The No Content (204) response will never have a message body or a MIME Type. Invoke the delegate with self
+        [self informDelegateOfObjectLoadWithResultDictionary:[NSDictionary dictionaryWithObject:self forKey:@""]];
+        return NO;
 	} else if (NO == [self canParseMIMEType:[self.response MIMEType]]) {
         // We can't parse the response, it's unmappable regardless of the status code
-        RKLogWarning(@"Encountered unexpected response with status code: %d (MIME Type: %@)", self.response.statusCode, self.response.MIMEType);
+        RKLogWarning(@"Encountered unexpected response with status code: %ld (MIME Type: %@)", (long) self.response.statusCode, self.response.MIMEType);
         NSError* error = [NSError errorWithDomain:RKRestKitErrorDomain code:RKObjectLoaderUnexpectedResponseError userInfo:nil];
         if ([_delegate respondsToSelector:@selector(objectLoaderDidLoadUnexpectedResponse:)]) {
             [(NSObject<RKObjectLoaderDelegate>*)_delegate objectLoaderDidLoadUnexpectedResponse:self];
@@ -298,7 +304,7 @@
 // Invoked just before request hits the network
 - (BOOL)prepareURLRequest {
     if ((self.sourceObject && self.params == nil) && (self.method == RKRequestMethodPOST || self.method == RKRequestMethodPUT)) {
-        NSAssert(self.serializationMapping, @"Cannot send an object to the remote");
+        NSAssert(self.serializationMapping, @"You must provide a serialization mapping for objects of type '%@'", NSStringFromClass([self.sourceObject class]));
         RKLogDebug(@"POST or PUT request for source object %@, serializing to MIME Type %@ for transport...", self.sourceObject, self.serializationMIMEType);
         RKObjectSerializer* serializer = [RKObjectSerializer serializerWithObject:self.sourceObject mapping:self.serializationMapping];
         NSError* error = nil;

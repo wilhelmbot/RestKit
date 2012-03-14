@@ -1,36 +1,7 @@
 require 'rubygems'
 
-begin
-  gem 'uispecrunner'
-  require 'uispecrunner'
-  require 'uispecrunner/options'
-rescue LoadError => error
-  puts "Unable to load UISpecRunner: #{error}"
-end
-
-namespace :uispec do
-  desc "Run all specs"
-  task :all do
-    options = UISpecRunner::Options.from_file('uispec.opts') rescue {}
-    uispec_runner = UISpecRunner.new(options)
-    uispec_runner.run_all!
-  end
-  
-  desc "Run all unit specs (those that implement UISpecUnit)"
-  task :units do
-    options = UISpecRunner::Options.from_file('uispec.opts') rescue {}
-    uispec_runner = UISpecRunner.new(options)
-    uispec_runner.run_protocol!('UISpecUnit')
-  end
-  
-  desc "Run all integration specs (those that implement UISpecIntegration)"
-  task :integration do
-    options = UISpecRunner::Options.from_file('uispec.opts') rescue {}
-    uispec_runner = UISpecRunner.new(options)
-    uispec_runner.run_protocol!('UISpecIntegration')
-  end
-  
-  desc "Run the Spec server via Shotgun"
+namespace :spec do
+  desc "Run the RestKit spec server"
   task :server do
     server_path = File.dirname(__FILE__) + '/Specs/Server/server.rb'
     system("ruby #{server_path}")
@@ -57,12 +28,11 @@ def run(command, min_exit_status = 0)
   return $?.exitstatus
 end
 
-desc "Run all specs"
-task :default => 'uispec:all'
+task :default => 'spec:server'
 
 desc "Build RestKit for iOS and Mac OS X"
 task :build do
-  run("xcodebuild -workspace RestKit.xcodeproj/project.xcworkspace -scheme RestKit -sdk iphonesimulator4.3 clean build")
+  run("xcodebuild -workspace RestKit.xcodeproj/project.xcworkspace -scheme RestKit -sdk iphonesimulator5.0 clean build")
   run("xcodebuild -workspace RestKit.xcodeproj/project.xcworkspace -scheme RestKit -sdk iphoneos clean build")
   run("xcodebuild -workspace RestKit.xcodeproj/project.xcworkspace -scheme RestKit -sdk macosx10.6 clean build")
   run("xcodebuild -workspace RestKit.xcodeproj/project.xcworkspace -scheme RestKitThree20 -sdk iphoneos clean build")
@@ -153,7 +123,7 @@ end
 namespace :build do
   desc "Build all Example projects to ensure they are building properly"
   task :examples do
-    ios_sdks = %w{iphoneos iphonesimulator4.3}
+    ios_sdks = %w{iphoneos iphonesimulator5.0}
     osx_sdks = %w{macosx}
     osx_projects = %w{RKMacOSX}
     

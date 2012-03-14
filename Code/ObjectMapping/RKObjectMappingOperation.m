@@ -25,14 +25,15 @@
 #import "RKObjectPropertyInspector.h"
 #import "RKObjectRelationshipMapping.h"
 #import "RKObjectMapper.h"
-#import "../Support/Errors.h"
-#import "../Support/RKLog.h"
+#import "Errors.h"
+#import "RKLog.h"
 
 // Set Logging Component
 #undef RKLogComponent
 #define RKLogComponent lcl_cRestKitObjectMapping
 
 // Temporary home for object equivalancy tests
+BOOL RKObjectIsValueEqualToValue(id sourceValue, id destinationValue);
 BOOL RKObjectIsValueEqualToValue(id sourceValue, id destinationValue) {
     NSCAssert(sourceValue, @"Expected sourceValue not to be nil");
     NSCAssert(destinationValue, @"Expected destinationValue not to be nil");
@@ -69,8 +70,12 @@ BOOL RKObjectIsValueEqualToValue(id sourceValue, id destinationValue) {
 @synthesize delegate = _delegate;
 @synthesize queue = _queue;
 
-+ (RKObjectMappingOperation*)mappingOperationFromObject:(id)sourceObject toObject:(id)destinationObject withMapping:(id<RKObjectMappingDefinition>)objectMapping {
-    return [[[self alloc] initWithSourceObject:sourceObject destinationObject:destinationObject mapping:objectMapping] autorelease];
++ (id)mappingOperationFromObject:(id)sourceObject toObject:(id)destinationObject withMapping:(id<RKObjectMappingDefinition>)objectMapping {
+    // Check for availability of ManagedObjectMappingOperation. Better approach for handling?
+    Class targetClass = NSClassFromString(@"RKManagedObjectMappingOperation");
+    if (targetClass == nil) targetClass = [RKObjectMappingOperation class];
+    
+    return [[[targetClass alloc] initWithSourceObject:sourceObject destinationObject:destinationObject mapping:objectMapping] autorelease];
 }
 
 - (id)initWithSourceObject:(id)sourceObject destinationObject:(id)destinationObject mapping:(id<RKObjectMappingDefinition>)objectMapping {
@@ -155,10 +160,19 @@ BOOL RKObjectIsValueEqualToValue(id sourceValue, id destinationValue) {
         if ([destinationType isSubclassOfClass:[NSArray class]]) {
             return [(NSSet*)value allObjects];
         }
+    } else if ([sourceType isSubclassOfClass:[NSOrderedSet class]]) {
+        // OrderedSet -> Array
+        if ([destinationType isSubclassOfClass:[NSArray class]]) {
+            return [(NSOrderedSet*)value array];
+        }
     } else if ([sourceType isSubclassOfClass:[NSArray class]]) {
         // Array -> Set
         if ([destinationType isSubclassOfClass:[NSSet class]]) {
             return [NSSet setWithArray:value];
+        }
+        // Array -> OrderedSet
+        if ([destinationType isSubclassOfClass:[NSOrderedSet class]]) {
+            return [NSOrderedSet orderedSetWithArray:value];
         }
     } else if ([sourceType isSubclassOfClass:[NSNumber class]] && [destinationType isSubclassOfClass:[NSDate class]]) {
         // Number -> Date
@@ -212,6 +226,18 @@ BOOL RKObjectIsValueEqualToValue(id sourceValue, id destinationValue) {
     id currentValue = [self.destinationObject valueForKeyPath:keyPath];
     if (currentValue == [NSNull null] || [currentValue isEqual:[NSNull null]]) {
         currentValue = nil;
+    }
+    
+    /**
+     WTF - This workaround should not be necessary, but I have been unable to replicate
+     the circumstances that trigger it in a unit test to fix elsewhere. The proper place
+     to handle it is in transformValue:atKeyPath:toType:
+     
+     See issue & pull request: https://github.com/RestKit/RestKit/pull/436
+     */
+    if (value == [NSNull null] || [value isEqual:[NSNull null]]) {
+        RKLogWarning(@"Coercing NSNull value to nil in shouldSetValue:atKeyPath: -- should be fixed.");
+        value = nil;
     }
     
 	if (nil == currentValue && nil == value) {

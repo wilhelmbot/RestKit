@@ -18,12 +18,19 @@
 //  limitations under the License.
 //
 
-#import "../Network/Network.h"
+#import "Network.h"
 #import "RKObjectMapping.h"
 #import "RKObjectMappingResult.h"
 
 @class RKObjectManager;
 @class RKObjectLoader;
+
+#if NS_BLOCKS_AVAILABLE 
+// NSArray will be nil when objectLoader:didFailWithError: is invoked
+// NSError will be nil when objectLoader:didLoadObjects: is invoked
+typedef void (^RKObjectLoaderCompletionHandler)(RKObjectLoader *, NSArray *, NSError *);
+#endif
+
 
 @protocol RKObjectLoaderDelegate <RKRequestDelegate>
 
@@ -120,6 +127,18 @@
 }
 
 /**
+ * Completion routine associated with this loader.
+ * @param the current RKObjectLoader
+ * @param a NSArray containing result objects. Will be nil when
+ * objectLoader:didFailWithError: is invoked.
+ * @param a NSError specifying RestKit errors. Will be nil when
+ * objectLoader:didLoadObjects: is invoked.
+ *
+ * @default nil 
+ */
+@property (nonatomic, copy) RKObjectLoaderCompletionHandler completionHandler;
+
+/**
  * The object mapping to use when processing the response. If this is nil,
  * then RestKit will search the parsed response body for mappable keyPaths and
  * perform mapping on all available content. For instances where your target JSON
@@ -129,6 +148,7 @@
  * @default nil
  * @see RKObjectMappingProvider
  */
+// TODO: Rename to responseMapping
 @property (nonatomic, retain) RKObjectMapping* objectMapping;
 
 /**
@@ -158,6 +178,7 @@
  *
  * @see RKObjectMappingProvider
  */
+// TODO: Rename to requestMapping?
 @property (nonatomic, retain) RKObjectMapping* serializationMapping;
 
 /**
